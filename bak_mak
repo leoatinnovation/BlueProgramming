@@ -1,0 +1,18 @@
+CC=gcc
+CFLAGS=-I.
+DEPS = error_codes.h
+_OBJ = simplescan.o scan_thread.o
+OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
+ODIR=obj
+
+# Ensure the object directory exists
+$(shell mkdir -p $(ODIR))
+
+$(ODIR)/%.o: src/%.c $(DEPS)
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+simplescan: $(OBJ)
+	$(CC) -o $@ $^ $(CFLAGS) -lpthread
+
+clean:
+	rm -f $(ODIR)/*.o simplescan

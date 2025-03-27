@@ -1,0 +1,7 @@
+March 16 
+    Done:
+        (1) Scanning done 
+    TODO:
+        (2) Logging with timestamp
+        (3) scan for 60 secs, stop and then rescan
+        (4) update the results to a buffer
