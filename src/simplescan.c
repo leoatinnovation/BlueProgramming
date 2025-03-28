@@ -17,7 +17,7 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 bt_data_t bt_data_array[MAX_BT_DEVICES] = {0};
 
 extern int scan_devices(bt_data_t *bt_data_array, int *num_devices);
-extern bool cmp_device(bt_data_t *scan_bt_data);
+extern bool cmp_device(bt_data_t *scan_bt_data, char *name);
 int num_devices = 0;
 
 void * scan_thread(void *arg) {
@@ -53,6 +53,9 @@ void * check_devices(void *arg) {
     uint8_t count = 0U;
     uint8_t i = 0;
     bool device_found = false;
+    char device_name[MAX_NAME_LEN];
+
+    memset(device_name, 0U, MAX_NAME_LEN);
 
     while (1) {
         pthread_mutex_lock(&mutex);
@@ -60,17 +63,22 @@ void * check_devices(void *arg) {
             pthread_cond_wait(&cond, &mutex);
         }
         for(i = 0; i < num_devices; i++){
-            if(cmp_device(&bt_data_array[i]) == true){
+            memset(device_name, 0U, sizeof(device_name));
+            bool temp = cmp_device(&bt_data_array[i], device_name); 
+            if(temp == true){
                 printf("Device Found bt_device->name: %s\n", bt_data_array[i].name);
                 printf("Device Found bt_device->addr: %s\n", bt_data_array[i].addr);
-                device_found=true;
+                for(i=0;i<3;++i){
+                    char command[300]; // Buffer to hold the command
+    //                sprintf(command, "espeak -a 200 \"%s\"", device_name);
+                    sprintf(command, "flite -t \"%s\"", device_name);
+                    system(command);
+                    sleep(2);
+                    system("mpg123 login_linux.mp3");
+                }
             }
         }
         pthread_mutex_unlock(&mutex);
-        if(device_found==true){
-            system("mpg123 --loop 3 login_linux.mp3");
-            device_found=false;
-        }
         printf("check_devices done\n");
         sleep(20);
     }
