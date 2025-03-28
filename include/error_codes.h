@@ -1,3 +1,6 @@
+#ifndef __ERROR_CODES_H__
+#define __ERROR_CODES_H__
+
 // hci socket related errors
 #define ERROR_SUCCESS               0x00
 #define ERROR_SOCKET                0x10
@@ -33,3 +36,5 @@
 #define ERROR_NO_DEVICE_FOUND       (ERROR_DEVICE + 1)
 #define ERROR_DEVICE_FOUND          (ERROR_DEVICE + 2)
 #define ERROR_DEVICE_NOT_CONNECTED  (ERROR_DEVICE + 3)
+
+#endif
