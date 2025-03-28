@@ -5,6 +5,7 @@
 
 #define MAX_BT_DEVICES 32
 #define MAX_BT_DEVICES_PREDEFINED 2
+#define MAX_NAME_LEN   200
 
 typedef struct bt_data {
     char addr[19];
