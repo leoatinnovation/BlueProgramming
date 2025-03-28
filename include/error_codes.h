@@ -1,24 +1,40 @@
-// hci socket related errors
-#define ERROR_SOCKET    0x10
-#define ERROR_SOCKET_OPENING (ERROR_SOCKET + 1)
-#define ERROR_SOCKET_BINDING (ERROR_SOCKET + 2)
-#define ERROR_SOCKET_LISTENING (ERROR_SOCKET + 3)
-#define ERROR_SOCKET_ACCEPTING (ERROR_SOCKET + 4)
-#define ERROR_SOCKET_CONNECTING (ERROR_SOCKET + 5)
-#define ERROR_SOCKET_SENDING (ERROR_SOCKET + 6)
-#define ERROR_SOCKET_RECEIVING (ERROR_SOCKET + 7)
-#define ERROR_SOCKET_CLOSING (ERROR_SOCKET + 8)
+#ifndef __ERROR_CODES_H__
+#define __ERROR_CODES_H__
 
-#define ERROR_INQUIRY 0x20
+// hci socket related errors
+#define ERROR_SUCCESS               0x00
+#define ERROR_SOCKET                0x10
+#define ERROR_SOCKET_OPENING        (ERROR_SOCKET + 1)
+#define ERROR_SOCKET_BINDING        (ERROR_SOCKET + 2)
+#define ERROR_SOCKET_LISTENING      (ERROR_SOCKET + 3)
+#define ERROR_SOCKET_ACCEPTING      (ERROR_SOCKET + 4)
+#define ERROR_SOCKET_CONNECTING     (ERROR_SOCKET + 5)
+#define ERROR_SOCKET_SENDING        (ERROR_SOCKET + 6)
+#define ERROR_SOCKET_RECEIVING      (ERROR_SOCKET + 7)
+#define ERROR_SOCKET_CLOSING        (ERROR_SOCKET + 8)
+
+#define ERROR_INQUIRY               0x20
 
 // hci related errors
-#define ERROR_HCI   0x30
-#define ERROR_HCI_OPEN_DEV (ERROR_HCI + 1)
-#define ERROR_HCI_GET_ROUTE (ERROR_HCI + 2)
-#define ERROR_HCI_ENQUIRY (ERROR_HCI + 3)
-#define ERROR_HCI_ENQUIRY_RESULT (ERROR_HCI + 4)
+#define ERROR_HCI                   0x30
+#define ERROR_HCI_OPEN_DEV          (ERROR_HCI + 1)
+#define ERROR_HCI_GET_ROUTE         (ERROR_HCI + 2)
+#define ERROR_HCI_ENQUIRY           (ERROR_HCI + 3)
+#define ERROR_HCI_ENQUIRY_RESULT    (ERROR_HCI + 4)
 
 // memory related errors
-#define ERROR_MEMORY 0x40
-#define ERROR_MEMORY_ALLOCATION (ERROR_MEMORY + 1)
-#define ERROR_MEMORY_DEALLOCATION (ERROR_MEMORY + 2)
+#define ERROR_MEMORY                0x40
+#define ERROR_MEMORY_ALLOCATION     (ERROR_MEMORY + 1)
+#define ERROR_MEMORY_DEALLOCATION   (ERROR_MEMORY + 2)
+
+// Max devices related errors
+#define ERROR_MAX_DEVICES           0x50
+#define ERROR_MAX_DEVICES_REACHED   (ERROR_MAX_DEVICES + 1)
+
+// Device related errors
+#define ERROR_DEVICE                0x60
+#define ERROR_NO_DEVICE_FOUND       (ERROR_DEVICE + 1)
+#define ERROR_DEVICE_FOUND          (ERROR_DEVICE + 2)
+#define ERROR_DEVICE_NOT_CONNECTED  (ERROR_DEVICE + 3)
+
+#endif

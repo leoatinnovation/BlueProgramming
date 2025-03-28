@@ -38,7 +38,7 @@ $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS)
 
 
 clean:
-	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/simplescan
+	rm -rf $(BUILD_DIR)/*.o $(BUILD_DIR)/src $(BUILD_DIR)/simplescan
 
 # Include the .d makefiles. The - at the front suppresses the errors of missing
 # Makefiles. Initially, all the .d files will be missing, and we don't want those
