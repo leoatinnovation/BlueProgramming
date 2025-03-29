@@ -42,21 +42,30 @@ void *scan_thread(void *arg) {
     return NULL;
 }
 
-void *check_devices(void *arg) {
-    char device_name[MAX_NAME_LEN] = {0};
+void * check_devices(void *arg) {
+    uint8_t thread_id = *((uint8_t *)arg);
+    int errCode = 0U;
+    uint8_t count = 0U;
+    uint8_t i = 0;
+    bool device_found = false;
+    char device_name[MAX_NAME_LEN];
+
+    memset(device_name, 0U, MAX_NAME_LEN);
 
     while (1) {
         pthread_mutex_lock(&mutex);
         if (num_devices <= 0) {
             pthread_cond_wait(&cond, &mutex);
         }
-
-        for (uint8_t i = 0; i < num_devices; i++) {
-            memset(device_name, 0, sizeof(device_name));
-            if (cmp_device(&bt_data_array[i], device_name)) {
-                printf("Device Found: %s (%s)\n", bt_data_array[i].name, bt_data_array[i].addr);
-                for (uint8_t j = 0; j < 3; ++j) {
-                    char command[300];
+        for(i = 0; i < num_devices; i++){
+            memset(device_name, 0U, sizeof(device_name));
+            bool temp = cmp_device(&bt_data_array[i], device_name); 
+            if(temp == true){
+                printf("Device Found bt_device->name: %s\n", bt_data_array[i].name);
+                printf("Device Found bt_device->addr: %s\n", bt_data_array[i].addr);
+                for(i=0;i<3;++i){
+                    char command[300]; // Buffer to hold the command
+    //                sprintf(command, "espeak -a 200 \"%s\"", device_name);
                     sprintf(command, "flite -t \"%s\"", device_name);
                     system(command);
                     sleep(2);
