@@ -1,95 +1,68 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <sys/socket.h>
 #include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
-#include <pthread.h>
 #include "error_codes.h"
 #include "bt_data.h"
-#include <stdbool.h>
+#include "queueOps.h"
 
-pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+char device_name[MAX_NAME_LEN];
 
 // BT data array for discovered devices
 bt_data_t bt_data_array[MAX_BT_DEVICES] = {0};
 
-extern int scan_devices(bt_data_t *bt_data_array, int *num_devices);
-extern bool cmp_device(bt_data_t *scan_bt_data, char *name);
-int num_devices = 0;
+// Conditional variable 
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-void *scan_thread(void *arg) {
-    uint8_t errCode = 0U;
+// Mutex variable
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-    while (1) {
-        pthread_mutex_lock(&mutex);
-        errCode = scan_devices(bt_data_array, &num_devices);
-        pthread_mutex_unlock(&mutex);
+int num_devices = 0U;
 
-        if (errCode != ERROR_SUCCESS) {
-            printf("Error scanning devices\n");
-        } else if (num_devices == 0) {
-            printf("Devices not found, rescan again\n");
-            sleep(5);
-        } else {
-            pthread_cond_signal(&cond);
-            sleep(10);
-        }
-    }
+extern message_queue_t queue;
 
-    return NULL;
-}
+extern void *scan_thread(void *arg);
+extern void *check_devices(void *arg);
+extern void *play_music(void *arg);
+extern void init_queue(message_queue_t *queue);
 
-void * check_devices(void *arg) {
+void * keyboard_input(void *arg) {
     uint8_t thread_id = *((uint8_t *)arg);
     int errCode = 0U;
-    uint8_t count = 0U;
-    uint8_t i = 0;
-    bool device_found = false;
-    char device_name[MAX_NAME_LEN];
+    char *line = NULL;
+    size_t len = 0;
+    ssize_t read;
 
-    memset(device_name, 0U, MAX_NAME_LEN);
+    printf("\nEnter string below [ctrl + d] to quit\n");
 
-    while (1) {
-        pthread_mutex_lock(&mutex);
-        if (num_devices <= 0) {
-            pthread_cond_wait(&cond, &mutex);
+    while ((read = getline(&line, &len, stdin)) != -1) {
+        if (read > 0) {
+            printf("\nRead %zd chars from stdin: %s", read, line);
         }
-        for(i = 0; i < num_devices; i++){
-            memset(device_name, 0U, sizeof(device_name));
-            bool temp = cmp_device(&bt_data_array[i], device_name); 
-            if(temp == true){
-                printf("Device Found bt_device->name: %s\n", bt_data_array[i].name);
-                printf("Device Found bt_device->addr: %s\n", bt_data_array[i].addr);
-                for(i=0;i<3;++i){
-                    char command[300]; // Buffer to hold the command
-    //                sprintf(command, "espeak -a 200 \"%s\"", device_name);
-                    sprintf(command, "flite -t \"%s\"", device_name);
-                    system(command);
-                    sleep(2);
-                    system("mpg123 login_linux.mp3");
-                }
-            }
-        }
-        pthread_mutex_unlock(&mutex);
-        printf("check_devices done\n");
-        sleep(20);
+        printf("Enter string below [ctrl + d] to quit\n");
     }
 
+    free(line);  // Free memory allocated by getline
     return NULL;
 }
 
 int main(int argc, char **argv) {
-    pthread_t threads[2];
-    uint8_t thread_ids[2] = {0, 1};
+    pthread_t threads[MAX_THREADS];
+    uint8_t thread_ids[MAX_THREADS] = {0, 1, 2, 3};
+
+    init_queue(&queue);
 
     pthread_create(&threads[0], NULL, scan_thread, &thread_ids[0]);
     sleep(2);
-    pthread_create(&threads[1], NULL, check_devices, &thread_ids[1]);
+    pthread_create(&threads[1], NULL, check_devices, &queue);
+    sleep(2);
+    pthread_create(&threads[2], NULL, keyboard_input, &thread_ids[2]);
+    sleep(2);
+    pthread_create(&threads[2], NULL, play_music, &queue);    
 
-    for (uint8_t i = 0; i < 2; i++) {
+    for (uint8_t i = 0; i < MAX_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 

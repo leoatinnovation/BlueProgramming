@@ -8,7 +8,10 @@
 #include "error_codes.h"
 #include "bt_data.h"
 
-int scan_devices(bt_data_t *bt_data_array, int *num_devices)
+extern pthread_mutex_t mutex;
+extern pthread_cond_t cond;
+
+static int scan_devices(bt_data_t *bt_data_array, int *num_devices)
 {
     int errCode = ERROR_SUCCESS;
     inquiry_info *hci_query_info = NULL;
@@ -67,4 +70,26 @@ done:
     free( hci_query_info );
     close( sock );
     return errCode;
+}
+
+void *scan_thread(void *arg) {
+    uint8_t errCode = 0U;
+
+    while (1) {
+        pthread_mutex_lock(&mutex);
+        errCode = scan_devices(bt_data_array, &num_devices);
+        pthread_mutex_unlock(&mutex);
+
+        if (errCode != ERROR_SUCCESS) {
+            printf("Error scanning devices\n");
+        } else if (num_devices == 0) {
+            printf("Devices not found, rescan again\n");
+            sleep(5);
+        } else {
+            pthread_cond_signal(&cond);
+            sleep(10);
+        }
+    }
+
+    return NULL;
 }

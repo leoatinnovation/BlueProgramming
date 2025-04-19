@@ -1,0 +1,85 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#include <unistd.h>
+
+#define QUEUE_SIZE 10
+
+typedef struct {
+    int buffer[QUEUE_SIZE];
+    int front;
+    int rear;
+    int count;
+    pthread_mutex_t mutex;
+    pthread_cond_t not_empty;
+    pthread_cond_t not_full;
+} message_queue_t;
+
+void init_queue(message_queue_t *queue) {
+    queue->front = 0;
+    queue->rear = 0;
+    queue->count = 0;
+    pthread_mutex_init(&queue->mutex, NULL);
+    pthread_cond_init(&queue->not_empty, NULL);
+    pthread_cond_init(&queue->not_full, NULL);
+}
+
+void enqueue(message_queue_t *queue, int item) {
+    pthread_mutex_lock(&queue->mutex);
+    while (queue->count == QUEUE_SIZE) {
+        pthread_cond_wait(&queue->not_full, &queue->mutex);
+    }
+    queue->buffer[queue->rear] = item;
+    queue->rear = (queue->rear + 1) % QUEUE_SIZE;
+    queue->count++;
+    pthread_cond_signal(&queue->not_empty);
+    pthread_mutex_unlock(&queue->mutex);
+}
+
+int dequeue(message_queue_t *queue) {
+    pthread_mutex_lock(&queue->mutex);
+    while (queue->count == 0) {
+        pthread_cond_wait(&queue->not_empty, &queue->mutex);
+    }
+    int item = queue->buffer[queue->front];
+    queue->front = (queue->front + 1) % QUEUE_SIZE;
+    queue->count--;
+    pthread_cond_signal(&queue->not_full);
+    pthread_mutex_unlock(&queue->mutex);
+    return item;
+}
+
+void *producer(void *arg) {
+    message_queue_t *queue = (message_queue_t *)arg;
+    for (int i = 0; i < 20; i++) {
+        printf("Producing %d\n", i);
+        enqueue(queue, i);
+        sleep(1);
+    }
+    return NULL;
+}
+
+void *consumer(void *arg) {
+    message_queue_t *queue = (message_queue_t *)arg;
+    for (int i = 0; i < 20; i++) {
+        int item = dequeue(queue);
+        printf("Consuming %d\n", item);
+        sleep(2);
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t producer_thread, consumer_thread;
+    message_queue_t queue;
+
+    init_queue(&queue);
+
+    pthread_create(&producer_thread, NULL, producer, &queue);
+    pthread_create(&consumer_thread, NULL, consumer, &queue);
+
+    pthread_join(producer_thread, NULL);
+    pthread_join(consumer_thread, NULL);
+
+    return 0;
+}
